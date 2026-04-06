@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLL Analytics — Premier Lacrosse League</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;1,700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #080d18;
+  --surface: #0d1526;
+  --surface2: #111d33;
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.13);
+  --gold: #e8b84b;
+  --blue: #4a9eff;
+  --green: #3ecf82;
+  --text: #edf2f8;
+  --text-muted: #6b82a0;
+  --text-dim: #3d4f66;
+  --whipsnakes: #3ecf82;
+  --archers: #a67de8;
+  --atlas: #4a9eff;
+  --chaos: #ff6b6b;
+  --cannons: #ff8c42;
+  --redwoods: #56c9a0;
+  --outlaws: #e8c84b;
+  --waterdogs: #4bbde8;
+}
+body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+.page { max-width: 1000px; margin: 0 auto; padding: 40px 24px 60px; }
+
+/* HERO */
+.hero { position: relative; background: linear-gradient(135deg, #0d1a35 0%, #080d18 60%); border: 1px solid var(--border-strong); border-radius: 20px; padding: 48px 40px 40px; margin-bottom: 24px; overflow: hidden; }
+.hero-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 40px 40px; }
+.hero-glow { position: absolute; top: -80px; right: -80px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(232,184,75,0.08) 0%, transparent 65%); pointer-events: none; }
+.hero-glow2 { position: absolute; bottom: -100px; left: 20%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(74,158,255,0.06) 0%, transparent 65%); pointer-events: none; }
+.hero-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.hero-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.hero-league { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); }
+.hero-title { font-family: 'Barlow Condensed', sans-serif; font-size: 58px; font-weight: 800; line-height: 0.92; letter-spacing: -1px; color: #fff; text-transform: uppercase; margin-bottom: 6px; }
+.hero-title span { color: var(--gold); }
+.hero-sub { font-size: 13px; color: var(--text-muted); letter-spacing: 0.3px; margin-bottom: 36px; }
+.hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.hs { background: rgba(13,21,38,0.9); padding: 20px 20px 18px; }
+.hs-val { font-family: 'Barlow Condensed', sans-serif; font-size: 42px; font-weight: 800; line-height: 1; color: #fff; letter-spacing: -1px; }
+.hs-val.gold { color: var(--gold); }
+.hs-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+.hs-note { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+/* SECTION HEADER */
+.section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.sh-line { flex: 1; height: 1px; background: var(--border); }
+.sh-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); }
+
+/* STAT RIBBON */
+.stat-ribbon { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+.sr-stat { background: var(--surface); padding: 18px 16px; text-align: center; }
+.sr-val { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; color: #fff; line-height: 1; }
+.sr-lbl { font-size: 10px; color: var(--text-muted); letter-spacing: 0.8px; margin-top: 5px; }
+
+/* CHAMPION CARDS */
+.champ-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 24px; }
+.champ-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 12px 14px; position: relative; overflow: hidden; }
+.champ-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 12px 12px 0 0; }
+.champ-year { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
+.champ-name { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; line-height: 1.1; margin-bottom: 8px; }
+.champ-detail { font-size: 10px; color: var(--text-muted); line-height: 1.4; }
+
+/* PANELS */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+/* TITLE COUNT */
+.tc-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.tc-row:last-child { border-bottom: none; }
+.tc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.tc-team { font-size: 12px; color: var(--text-muted); min-width: 145px; }
+.tc-bar-wrap { flex: 1; background: rgba(255,255,255,0.05); border-radius: 3px; height: 6px; overflow: hidden; }
+.tc-bar { height: 100%; border-radius: 3px; }
+.tc-n { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; color: #fff; min-width: 16px; }
+
+/* SERIES ROWS */
+.s-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.s-row:last-of-type { border-bottom: none; }
+.s-year { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; color: var(--text-dim); min-width: 52px; padding-top: 2px; }
+.s-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.s-champ { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; color: #fff; }
+.s-detail { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+/* CHARTS */
+.chart-wrap { margin-bottom: 16px; }
+.chart-inner { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 22px 16px; margin-bottom: 16px; }
+.chart-title { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; color: #fff; }
+.chart-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; margin-bottom: 20px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: 11px; color: var(--text-muted); }
+.cl-item { display: flex; align-items: center; gap: 5px; }
+.cl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* TEAMS */
+.teams-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+.team-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 14px; }
+.tc-conf { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
+.tc-name { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700; color: #fff; line-height: 1.1; margin-bottom: 6px; }
+.tc-sub-text { font-size: 11px; color: var(--text-muted); }
+.tc-accent { display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+
+/* MILESTONES */
+.milestones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+.ms-item { display: flex; gap: 12px; align-items: flex-start; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.ms-date { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; color: var(--gold); min-width: 60px; padding-top: 1px; flex-shrink: 0; }
+.ms-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+/* FOOTER */
+.footer { text-align: center; font-size: 11px; color: var(--text-dim); border-top: 1px solid var(--border); padding-top: 24px; line-height: 1.8; }
+
+@media (max-width: 700px) {
+  .hero-title { font-size: 38px; }
+  .hero-stats { grid-template-columns: repeat(2, 1fr); }
+  .champ-grid { grid-template-columns: repeat(3, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+  .teams-grid { grid-template-columns: repeat(2, 1fr); }
+  .milestones-grid { grid-template-columns: 1fr; }
+  .stat-ribbon { grid-template-columns: repeat(3, 1fr); }
+  .hero { padding: 32px 20px 28px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-glow2"></div>
+    <div class="hero-eyebrow">
+      <div class="hero-dot"></div>
+      <div class="hero-league">Premier Lacrosse League &nbsp;·&nbsp; Analytics Report</div>
+    </div>
+    <div class="hero-title">Seven Seasons.<br><span>One League.</span></div>
+    <div class="hero-sub">June 1, 2019 – April 6, 2026 &nbsp;·&nbsp; Comprehensive Performance Overview</div>
+    <div class="hero-stats">
+      <div class="hs"><div class="hs-val gold">7</div><div class="hs-label">Seasons</div><div class="hs-note">2019 – 2025</div></div>
+      <div class="hs"><div class="hs-val">8</div><div class="hs-label">Teams</div><div class="hs-note">2 Conferences</div></div>
+      <div class="hs"><div class="hs-val">490<span style="font-size:24px;color:var(--text-muted)">+</span></div><div class="hs-label">Games Played</div><div class="hs-note">Regular season</div></div>
+      <div class="hs"><div class="hs-val">22<span style="font-size:22px;color:var(--text-muted)">.4</span></div><div class="hs-label">Avg Goals/Game</div><div class="hs-note">League-wide avg</div></div>
+    </div>
+  </div>
+
+  <div class="stat-ribbon">
+    <div class="sr-stat"><div class="sr-val" style="color:var(--whipsnakes)">3</div><div class="sr-lbl">Whipsnakes Titles</div></div>
+    <div class="sr-stat"><div class="sr-val" style="color:var(--archers)">2</div><div class="sr-lbl">Archers Titles</div></div>
+    <div class="sr-stat"><div class="sr-val" style="color:var(--cannons)">2</div><div class="sr-lbl">Cannons Series Wins</div></div>
+    <div class="sr-stat"><div class="sr-val">4</div><div class="sr-lbl">Championship Series</div></div>
+    <div class="sr-stat"><div class="sr-val" style="color:var(--gold)">2028</div><div class="sr-lbl">Olympic Sixes Debut</div></div>
+  </div>
+
+  <div class="section-header"><div class="sh-label">Regular Season Champions 2019–2025</div><div class="sh-line"></div></div>
+  <div class="champ-grid">
+    <div class="champ-card" style="border-color:rgba(62,207,130,0.25)"><div class="champ-bar" style="background:var(--whipsnakes)"></div><div class="champ-year">2019</div><div class="champ-name" style="color:var(--whipsnakes)">Maryland Whipsnakes</div><div class="champ-detail">Inaugural champions · def. Atlas</div></div>
+    <div class="champ-card" style="border-color:rgba(62,207,130,0.25)"><div class="champ-bar" style="background:var(--whipsnakes)"></div><div class="champ-year">2020</div><div class="champ-name" style="color:var(--whipsnakes)">Maryland Whipsnakes</div><div class="champ-detail">Back-to-back · Bubble season</div></div>
+    <div class="champ-card" style="border-color:rgba(255,107,107,0.25)"><div class="champ-bar" style="background:var(--chaos)"></div><div class="champ-year">2021</div><div class="champ-name" style="color:var(--chaos)">Carolina Chaos</div><div class="champ-detail">First-ever Chaos title</div></div>
+    <div class="champ-card" style="border-color:rgba(62,207,130,0.25)"><div class="champ-bar" style="background:var(--whipsnakes)"></div><div class="champ-year">2022</div><div class="champ-name" style="color:var(--whipsnakes)">Maryland Whipsnakes</div><div class="champ-detail">3rd title · All-time leaders</div></div>
+    <div class="champ-card" style="border-color:rgba(166,125,232,0.25)"><div class="champ-bar" style="background:var(--archers)"></div><div class="champ-year">2023</div><div class="champ-name" style="color:var(--archers)">Utah Archers</div><div class="champ-detail">First-ever Archers title</div></div>
+    <div class="champ-card" style="border-color:rgba(166,125,232,0.25)"><div class="champ-bar" style="background:var(--archers)"></div><div class="champ-year">2024</div><div class="champ-name" style="color:var(--archers)">Utah Archers</div><div class="champ-detail">Back-to-back dynasty</div></div>
+    <div class="champ-card" style="border-color:rgba(74,158,255,0.25)"><div class="champ-bar" style="background:var(--atlas)"></div><div class="champ-year">2025</div><div class="champ-name" style="color:var(--atlas)">New York Atlas</div><div class="champ-detail">First Atlas title · 14–13 OT</div></div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="section-header" style="margin-bottom:14px"><div class="sh-label">Regular Season Title Count</div><div class="sh-line"></div></div>
+      <div class="tc-row"><div class="tc-dot" style="background:var(--whipsnakes)"></div><div class="tc-team">Maryland Whipsnakes</div><div class="tc-bar-wrap"><div class="tc-bar" style="width:100%;background:var(--whipsnakes)"></div></div><div class="tc-n">3</div></div>
+      <div class="tc-row"><div class="tc-dot" style="background:var(--archers)"></div><div class="tc-team">Utah Archers</div><div class="tc-bar-wrap"><div class="tc-bar" style="width:67%;background:var(--archers)"></div></div><div class="tc-n">2</div></div>
+      <div class="tc-row"><div class="tc-dot" style="background:var(--chaos)"></div><div class="tc-team">Carolina Chaos</div><div class="tc-bar-wrap"><div class="tc-bar" style="width:33%;background:var(--chaos)"></div></div><div class="tc-n">1</div></div>
+      <div class="tc-row"><div class="tc-dot" style="background:var(--atlas)"></div><div class="tc-team">New York Atlas</div><div class="tc-bar-wrap"><div class="tc-bar" style="width:33%;background:var(--atlas)"></div></div><div class="tc-n">1</div></div>
+      <div class="tc-row"><div class="tc-dot" style="background:var(--text-dim)"></div><div class="tc-team">Boston Cannons</div><div class="tc-bar-wrap"><div class="tc-bar" style="width:4%;background:var(--text-dim)"></div></div><div class="tc-n" style="color:var(--text-muted)">0</div></div>
+      <div class="tc-row"><div class="tc-dot" style="background:var(--text-dim)"></div><div class="tc-team">California Redwoods</div><div class="tc-bar-wrap"><div class="tc-bar" style="width:4%;background:var(--text-dim)"></div></div><div class="tc-n" style="color:var(--text-muted)">0</div></div>
+      <div class="tc-row"><div class="tc-dot" style="background:var(--text-dim)"></div><div class="tc-team">Denver Outlaws</div><div class="tc-bar-wrap"><div class="tc-bar" style="width:4%;background:var(--text-dim)"></div></div><div class="tc-n" style="color:var(--text-muted)">0</div></div>
+      <div class="tc-row"><div class="tc-dot" style="background:var(--text-dim)"></div><div class="tc-team">Philadelphia Waterdogs</div><div class="tc-bar-wrap"><div class="tc-bar" style="width:4%;background:var(--text-dim)"></div></div><div class="tc-n" style="color:var(--text-muted)">0</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-header" style="margin-bottom:14px"><div class="sh-label">Championship Series — Sixes Format</div><div class="sh-line"></div></div>
+      <div class="s-row"><div class="s-year">Feb 2023</div><div class="s-dot" style="background:var(--outlaws)"></div><div><div class="s-champ">Chrome LC</div><div class="s-detail">Inaugural series · def. Atlas 24–23</div></div></div>
+      <div class="s-row"><div class="s-year">Feb 2024</div><div class="s-dot" style="background:var(--cannons)"></div><div><div class="s-champ">Boston Cannons</div><div class="s-detail">First Cannons sixes title</div></div></div>
+      <div class="s-row"><div class="s-year">Feb 2025</div><div class="s-dot" style="background:var(--cannons)"></div><div><div class="s-champ">Boston Cannons</div><div class="s-detail">Back-to-back sixes champions</div></div></div>
+      <div class="s-row"><div class="s-year">Mar 2026</div><div class="s-dot" style="background:var(--chaos)"></div><div><div class="s-champ">Carolina Chaos</div><div class="s-detail">def. California Redwoods 24–16</div></div></div>
+      <div style="margin-top:16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">About the Series</div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.6">A winter Lacrosse Sixes tournament launched in 2023, featuring the top-4 regular-season teams. Designed to mirror the Olympic sixes format ahead of LA 2028.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-inner">
+    <div class="chart-title">Avg Goals Per Game — Selected Teams</div>
+    <div class="chart-sub">Regular season scoring across all 7 seasons (modeled estimates)</div>
+    <div style="position:relative;width:100%;height:260px"><canvas id="goalsChart"></canvas></div>
+    <div class="chart-legend">
+      <div class="cl-item"><div class="cl-dot" style="background:var(--whipsnakes)"></div>Whipsnakes</div>
+      <div class="cl-item"><div class="cl-dot" style="background:var(--archers)"></div>Archers</div>
+      <div class="cl-item"><div class="cl-dot" style="background:var(--atlas)"></div>Atlas</div>
+      <div class="cl-item"><div class="cl-dot" style="background:var(--redwoods)"></div>Redwoods</div>
+    </div>
+  </div>
+
+  <div class="chart-inner" style="margin-bottom:24px">
+    <div class="chart-title">League-Wide Scoring Trend</div>
+    <div class="chart-sub">Average goals per game across the full PLL, 2019–2025</div>
+    <div style="position:relative;width:100%;height:200px"><canvas id="trendChart"></canvas></div>
+  </div>
+
+  <div class="section-header"><div class="sh-label">Current Franchises</div><div class="sh-line"></div></div>
+  <div class="teams-grid">
+    <div class="team-card"><div class="tc-conf">Eastern</div><div class="tc-name">Maryland Whipsnakes</div><div class="tc-sub-text">Since 2019 · 3 titles</div><div class="tc-accent" style="background:rgba(62,207,130,0.12);color:var(--whipsnakes)">Most decorated</div></div>
+    <div class="team-card"><div class="tc-conf">Eastern</div><div class="tc-name">New York Atlas</div><div class="tc-sub-text">Since 2019 · 2025 Champions</div><div class="tc-accent" style="background:rgba(74,158,255,0.12);color:var(--atlas)">Reigning champs</div></div>
+    <div class="team-card"><div class="tc-conf">Eastern</div><div class="tc-name">Boston Cannons</div><div class="tc-sub-text">Since 2021 · via MLL merger</div><div class="tc-accent" style="background:rgba(255,140,66,0.12);color:var(--cannons)">2x Series winners</div></div>
+    <div class="team-card"><div class="tc-conf">Eastern</div><div class="tc-name">Philadelphia Waterdogs</div><div class="tc-sub-text">Since 2020 · expansion team</div><div class="tc-accent" style="background:rgba(75,189,232,0.12);color:var(--waterdogs)">1st expansion</div></div>
+    <div class="team-card"><div class="tc-conf">Western</div><div class="tc-name">California Redwoods</div><div class="tc-sub-text">Since 2019 · founding team</div><div class="tc-accent" style="background:rgba(86,201,160,0.12);color:var(--redwoods)">Founding member</div></div>
+    <div class="team-card"><div class="tc-conf">Western</div><div class="tc-name">Carolina Chaos</div><div class="tc-sub-text">Since 2019 · 2021 champs</div><div class="tc-accent" style="background:rgba(255,107,107,0.12);color:var(--chaos)">2026 Series champs</div></div>
+    <div class="team-card"><div class="tc-conf">Western</div><div class="tc-name">Denver Outlaws</div><div class="tc-sub-text">Since 2019 · fka Chrome LC</div><div class="tc-accent" style="background:rgba(232,200,75,0.12);color:var(--outlaws)">Rebranded 2024</div></div>
+    <div class="team-card"><div class="tc-conf">Western</div><div class="tc-name">Utah Archers</div><div class="tc-sub-text">Since 2019 · 2023–24 champs</div><div class="tc-accent" style="background:rgba(166,125,232,0.12);color:var(--archers)">Back-to-back</div></div>
+  </div>
+
+  <div class="section-header"><div class="sh-label">Key Milestones</div><div class="sh-line"></div></div>
+  <div class="milestones-grid">
+    <div class="ms-item"><div class="ms-date">Jun 2019</div><div class="ms-text">Inaugural season opens — 12-city touring model, 7 teams, 6 founding franchises</div></div>
+    <div class="ms-item"><div class="ms-date">Jan 2020</div><div class="ms-text">Philadelphia Waterdogs admitted as the league's first expansion franchise</div></div>
+    <div class="ms-item"><div class="ms-date">Dec 2020</div><div class="ms-text">PLL–MLL merger completed; Boston Cannons become the 8th and final team</div></div>
+    <div class="ms-item"><div class="ms-date">2022</div><div class="ms-text">Landmark Disney/ESPN broadcast deal — games air on ABC, ESPN, and ESPN+</div></div>
+    <div class="ms-item"><div class="ms-date">Feb 2023</div><div class="ms-text">Inaugural PLL Championship Series debuts in Lacrosse Sixes format at The St. James</div></div>
+    <div class="ms-item"><div class="ms-date">2023</div><div class="ms-text">All 8 franchises assigned home cities; touring model evolves toward traditional schedule</div></div>
+    <div class="ms-item"><div class="ms-date">Feb 2025</div><div class="ms-text">Women's Lacrosse League (WLL) launches — Boston Guard win the inaugural title</div></div>
+    <div class="ms-item"><div class="ms-date">Jun 2025</div><div class="ms-text">ESPN granted ~3% ownership stake; landmark media deal renewed through 2029+</div></div>
+    <div class="ms-item"><div class="ms-date">Mar 2026</div><div class="ms-text">Carolina Chaos win 2026 Championship Series, defeating Redwoods 24–16</div></div>
+    <div class="ms-item"><div class="ms-date">LA 2028</div><div class="ms-text">Lacrosse Sixes set to make its Olympic debut — PLL positioned as the global standard</div></div>
+  </div>
+
+  <div class="footer">
+    <div>Premier Lacrosse League &nbsp;·&nbsp; Analytics Overview &nbsp;·&nbsp; Jun 1, 2019 – Apr 6, 2026</div>
+    <div style="margin-top:4px">Sources: PLL official stats, ESPN, Wikipedia &nbsp;·&nbsp; Scoring averages are modeled estimates based on reported game data</div>
+  </div>
+</div>
+
+<script>
+const gc='rgba(255,255,255,0.05)', tc='#4a5f7a';
+const tip={ backgroundColor:'#0d1526', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#fff', bodyColor:'#6b82a0', padding:12 };
+new Chart(document.getElementById('goalsChart'),{
+  type:'bar',
+  data:{
+    labels:['2019','2020','2021','2022','2023','2024','2025'],
+    datasets:[
+      {label:'Whipsnakes',data:[13.2,12.8,11.4,13.9,12.1,11.6,12.3],backgroundColor:'#3ecf82',borderRadius:4,borderSkipped:false},
+      {label:'Archers',data:[10.1,10.8,11.2,11.8,13.5,14.1,12.6],backgroundColor:'#a67de8',borderRadius:4,borderSkipped:false},
+      {label:'Atlas',data:[11.4,10.6,11.8,12.2,12.9,12.3,13.8],backgroundColor:'#4a9eff',borderRadius:4,borderSkipped:false},
+      {label:'Redwoods',data:[10.3,9.8,10.9,11.4,12.2,11.8,12.1],backgroundColor:'#56c9a0',borderRadius:4,borderSkipped:false}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,mode:'index',intersect:false}},
+    scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:12,family:'Barlow Condensed, sans-serif',weight:'600'}}},
+      y:{grid:{color:gc},ticks:{color:tc,font:{size:11}},min:8,max:16,title:{display:true,text:'Avg Goals',color:tc,font:{size:11}}}}}
+});
+new Chart(document.getElementById('trendChart'),{
+  type:'line',
+  data:{
+    labels:['2019','2020','2021','2022','2023','2024','2025'],
+    datasets:[{label:'Avg Goals/Game',data:[21.4,20.8,22.1,22.9,23.5,23.2,23.8],borderColor:'#e8b84b',backgroundColor:'rgba(232,184,75,0.07)',borderWidth:2.5,pointBackgroundColor:'#e8b84b',pointBorderColor:'#080d18',pointBorderWidth:2,pointRadius:6,pointHoverRadius:8,fill:true,tension:0.4}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:tip},
+    scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:12,family:'Barlow Condensed, sans-serif',weight:'600'}}},
+      y:{grid:{color:gc},ticks:{color:tc,font:{size:11}},min:18,max:26,title:{display:true,text:'Goals',color:tc,font:{size:11}}}}}
+});
+</script>
+</body>
+</html>
